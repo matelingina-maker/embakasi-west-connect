@@ -4,14 +4,6 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-// Re-exportable input shapes (used by client mutations)
-export type ProfileInput = z.infer<typeof profileSchema>;
-export type ReportInput = z.infer<typeof reportSchema>;
-export type BursaryInput = z.infer<typeof bursarySchema>;
-export type NewsInput = z.infer<typeof newsInputSchema>;
-export type ProjectInput = z.infer<typeof projectInputSchema>;
-export type OpportunityInput = z.infer<typeof oppInputSchema>;
-
 // -------------------------------------------------------------------------
 // Public (anon) read-only helpers
 // -------------------------------------------------------------------------
