@@ -1,4 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const nav = [
   { to: "/services", label: "Services" },
@@ -8,6 +12,18 @@ const nav = [
 ] as const;
 
 export function SiteHeader() {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [q, setQ] = useState("");
+
+  async function handleSignOut() {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/", replace: true });
+  }
+
   return (
     <>
       <aside className="bg-primary py-2 px-4">
@@ -25,15 +41,15 @@ export function SiteHeader() {
       </aside>
 
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-3">
             <div className="size-8 bg-primary rounded-sm flex items-center justify-center">
               <div className="size-3 bg-primary-foreground/30 rounded-full" />
             </div>
-            <span className="font-semibold tracking-tight">E-WEST HUB</span>
+            <span className="font-semibold tracking-tight whitespace-nowrap">E-WEST HUB</span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             {nav.map((item) => (
               <Link
                 key={item.to}
@@ -46,12 +62,55 @@ export function SiteHeader() {
             ))}
           </div>
 
-          <Link
-            to="/contact"
-            className="text-sm font-medium py-1.5 px-3 ring-1 ring-border rounded hover:bg-muted transition-colors"
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate({ to: "/search", search: { q } });
+            }}
+            className="hidden md:flex flex-1 max-w-xs ml-auto"
           >
-            Contact Office
-          </Link>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search…"
+              className="w-full h-9 px-3 rounded-md ring-1 ring-border bg-white text-sm"
+            />
+          </form>
+
+          <div className="flex items-center gap-2 ml-auto md:ml-0">
+            {auth.user ? (
+              <>
+                {auth.isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="text-sm font-medium py-1.5 px-3 rounded hover:bg-muted transition-colors hidden sm:inline"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/dashboard"
+                  className="text-sm font-medium py-1.5 px-3 ring-1 ring-border rounded hover:bg-muted transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm font-medium py-1.5 px-2 text-muted-foreground hover:text-foreground"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/auth"
+                className="text-sm font-medium py-1.5 px-3 bg-primary text-primary-foreground rounded hover:brightness-110 transition-all"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
         </div>
       </nav>
     </>

@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { opportunities } from "@/lib/site-data";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { listOpportunities } from "@/lib/dashboard.functions";
+import { opportunities as fallbackOpps } from "@/lib/site-data";
 
 export const Route = createFileRoute("/opportunities")({
   head: () => ({
@@ -28,6 +31,18 @@ const typeStyles: Record<string, string> = {
 };
 
 function OpportunitiesPage() {
+  const fetchOpps = useServerFn(listOpportunities);
+  const { data } = useQuery({ queryKey: ["opportunities"], queryFn: () => fetchOpps() });
+  const rows = data && data.length > 0
+    ? data.map((o) => ({
+        id: o.id,
+        title: o.title,
+        organization: o.organization,
+        type: o.type as "Job" | "Internship" | "Attachment" | "Tender",
+        location: o.location ?? "—",
+        deadline: o.deadline ?? "—",
+      }))
+    : fallbackOpps;
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
       <header className="mb-12 max-w-2xl">
@@ -41,7 +56,7 @@ function OpportunitiesPage() {
       </header>
 
       <div className="bg-white rounded-xl ring-1 ring-black/5 divide-y divide-border overflow-hidden">
-        {opportunities.map((op) => (
+        {rows.map((op) => (
           <div
             key={op.id}
             className="p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 hover:bg-zinc-50 transition-colors"
