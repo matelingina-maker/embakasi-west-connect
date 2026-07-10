@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { projects } from "@/lib/site-data";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { listProjects } from "@/lib/dashboard.functions";
+import { projects as fallbackProjects } from "@/lib/site-data";
 
 export const Route = createFileRoute("/projects")({
   head: () => ({
@@ -27,6 +30,20 @@ const statusStyles: Record<string, string> = {
 };
 
 function ProjectsPage() {
+  const fetchProjects = useServerFn(listProjects);
+  const { data } = useQuery({ queryKey: ["projects"], queryFn: () => fetchProjects() });
+  const rows = data && data.length > 0
+    ? data.map((p) => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        ward: p.ward,
+        status: p.status as "Active" | "Planning" | "Completed",
+        progress: p.progress,
+        category: p.category,
+        image: p.image_url ?? fallbackProjects[0].image,
+      }))
+    : fallbackProjects;
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
       <header className="mb-12 max-w-2xl">
@@ -40,7 +57,7 @@ function ProjectsPage() {
       </header>
 
       <div className="space-y-4">
-        {projects.map((p) => (
+        {rows.map((p) => (
           <article
             key={p.id}
             className="p-4 md:p-6 rounded-xl ring-1 ring-black/5 flex flex-col md:flex-row gap-6 items-center bg-white"

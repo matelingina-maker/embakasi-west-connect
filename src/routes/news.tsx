@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { news } from "@/lib/site-data";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { listNews } from "@/lib/dashboard.functions";
+import { news as fallbackNews } from "@/lib/site-data";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
@@ -21,6 +24,17 @@ export const Route = createFileRoute("/news")({
 });
 
 function NewsPage() {
+  const fetchNews = useServerFn(listNews);
+  const { data } = useQuery({ queryKey: ["news"], queryFn: () => fetchNews() });
+  const rows = data && data.length > 0
+    ? data.map((n) => ({
+        id: n.id,
+        date: new Date(n.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }).toUpperCase(),
+        title: n.title,
+        summary: n.summary,
+        tag: n.tag ?? "News",
+      }))
+    : fallbackNews;
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 md:py-24">
       <header className="mb-12">
@@ -34,7 +48,7 @@ function NewsPage() {
       </header>
 
       <div className="space-y-8">
-        {news.map((n) => (
+        {rows.map((n) => (
           <article
             key={n.id}
             className="flex gap-6 pb-8 border-b border-border last:border-none"
