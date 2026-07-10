@@ -151,7 +151,8 @@ function ProfileForm({ profile }: { profile: { full_name: string | null; phone: 
   const update = useServerFn(updateMyProfile);
   const qc = useQueryClient();
   const m = useMutation({
-    mutationFn: (data: Parameters<typeof update>[0]["data"]) => update({ data }),
+    mutationFn: (data: { full_name: string; phone: string; ward: string; national_id: string }) =>
+      update({ data }),
     onSuccess: () => {
       toast.success("Profile updated");
       qc.invalidateQueries({ queryKey: ["my-dashboard"] });
@@ -200,7 +201,13 @@ function ReportForm() {
   const submit = useServerFn(submitReport);
   const qc = useQueryClient();
   const m = useMutation({
-    mutationFn: (data: Parameters<typeof submit>[0]["data"]) => submit({ data }),
+    mutationFn: (data: {
+      title: string;
+      category: string;
+      description: string;
+      location: string | null;
+      ward: string | null;
+    }) => submit({ data }),
     onSuccess: () => {
       toast.success("Report submitted. We will follow up.");
       qc.invalidateQueries({ queryKey: ["my-dashboard"] });
@@ -239,7 +246,13 @@ function BursaryForm() {
   const submit = useServerFn(submitBursary);
   const qc = useQueryClient();
   const m = useMutation({
-    mutationFn: (data: Parameters<typeof submit>[0]["data"]) => submit({ data }),
+    mutationFn: (data: {
+      student_name: string;
+      school: string;
+      level: string;
+      amount_requested: number;
+      reason: string | null;
+    }) => submit({ data }),
     onSuccess: () => {
       toast.success("Bursary application submitted");
       qc.invalidateQueries({ queryKey: ["my-dashboard"] });

@@ -145,7 +145,8 @@ function NewsPanel({ rows }: { rows: Array<{ id: string; title: string; summary:
   const del = useServerFn(deleteNews);
   const qc = useQueryClient();
   const add = useMutation({
-    mutationFn: (d: Parameters<typeof upsert>[0]["data"]) => upsert({ data: d }),
+    mutationFn: (d: { title: string; summary: string; tag: string | null; published: boolean }) =>
+      upsert({ data: d }),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-dashboard"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -197,7 +198,15 @@ function ProjectsPanel({ rows }: { rows: Array<{ id: string; title: string; ward
   const del = useServerFn(deleteProject);
   const qc = useQueryClient();
   const add = useMutation({
-    mutationFn: (d: Parameters<typeof upsert>[0]["data"]) => upsert({ data: d }),
+    mutationFn: (d: {
+      title: string;
+      description: string;
+      ward: string;
+      category: string;
+      status: "Planning" | "Active" | "Completed";
+      progress: number;
+      published: boolean;
+    }) => upsert({ data: d }),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-dashboard"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -259,7 +268,15 @@ function OpportunitiesPanel({ rows }: { rows: Array<{ id: string; title: string;
   const del = useServerFn(deleteOpportunity);
   const qc = useQueryClient();
   const add = useMutation({
-    mutationFn: (d: Parameters<typeof upsert>[0]["data"]) => upsert({ data: d }),
+    mutationFn: (d: {
+      title: string;
+      organization: string;
+      type: "Job" | "Internship" | "Attachment" | "Tender";
+      location: string | null;
+      deadline: string | null;
+      apply_url: string | null;
+      published: boolean;
+    }) => upsert({ data: d }),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["admin-dashboard"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -317,7 +334,7 @@ function OpportunitiesPanel({ rows }: { rows: Array<{ id: string; title: string;
   );
 }
 
-function ReportsPanel({ rows }: { rows: Array<{ id: string; title: string; category: string; status: string; ward: string | null; admin_notes: string | null; created_at: string; profiles: { full_name: string | null; phone: string | null; ward: string | null } | null }> }) {
+function ReportsPanel({ rows }: { rows: Array<{ id: string; title: string; category: string; status: string; ward: string | null; admin_notes: string | null; created_at: string; profile: { full_name: string | null; phone: string | null; ward: string | null } | null }> }) {
   const update = useServerFn(updateReportStatus);
   const qc = useQueryClient();
   const m = useMutation({
@@ -333,7 +350,7 @@ function ReportsPanel({ rows }: { rows: Array<{ id: string; title: string; categ
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{r.title}</p>
             <p className="text-xs text-muted-foreground">
-              {r.category} • {r.profiles?.full_name ?? "Unknown"}{r.profiles?.phone ? ` • ${r.profiles.phone}` : ""}{r.ward ? ` • ${r.ward}` : ""}
+              {r.category} • {r.profile?.full_name ?? "Unknown"}{r.profile?.phone ? ` • ${r.profile.phone}` : ""}{r.ward ? ` • ${r.ward}` : ""}
             </p>
           </div>
           <Select
@@ -352,7 +369,7 @@ function ReportsPanel({ rows }: { rows: Array<{ id: string; title: string; categ
   );
 }
 
-function BursariesPanel({ rows }: { rows: Array<{ id: string; student_name: string; school: string; level: string; amount_requested: number; status: string; admin_notes: string | null; profiles: { full_name: string | null; phone: string | null } | null }> }) {
+function BursariesPanel({ rows }: { rows: Array<{ id: string; student_name: string; school: string; level: string; amount_requested: number; status: string; admin_notes: string | null; profile: { full_name: string | null; phone: string | null; ward: string | null } | null }> }) {
   const update = useServerFn(updateBursaryStatus);
   const qc = useQueryClient();
   const m = useMutation({
@@ -368,7 +385,7 @@ function BursariesPanel({ rows }: { rows: Array<{ id: string; student_name: stri
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{b.student_name}</p>
             <p className="text-xs text-muted-foreground">
-              {b.school} • {b.level} • KES {b.amount_requested.toLocaleString()} • Guardian: {b.profiles?.full_name ?? "Unknown"}
+              {b.school} • {b.level} • KES {b.amount_requested.toLocaleString()} • Guardian: {b.profile?.full_name ?? "Unknown"}
             </p>
           </div>
           <Select
