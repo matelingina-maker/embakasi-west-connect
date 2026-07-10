@@ -232,19 +232,40 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       context.supabase.from("opportunities").select("*").order("created_at", { ascending: false }),
       context.supabase
         .from("issue_reports")
-        .select("*, profiles:profiles!issue_reports_user_id_fkey(full_name, phone, ward)")
+        .select("*")
         .order("created_at", { ascending: false }),
       context.supabase
         .from("bursary_applications")
-        .select("*, profiles:profiles!bursary_applications_user_id_fkey(full_name, phone)")
+        .select("*")
         .order("created_at", { ascending: false }),
     ]);
+
+    // Merge profile info for reports/bursaries
+    const userIds = Array.from(
+      new Set([
+        ...(reports.data ?? []).map((r) => r.user_id),
+        ...(bursaries.data ?? []).map((b) => b.user_id),
+      ]),
+    );
+    const profilesById = new Map<string, { full_name: string | null; phone: string | null; ward: string | null }>();
+    if (userIds.length) {
+      const { data: profs } = await context.supabase
+        .from("profiles")
+        .select("id, full_name, phone, ward")
+        .in("id", userIds);
+      for (const p of profs ?? []) profilesById.set(p.id, p);
+    }
+    const attach = <T extends { user_id: string }>(row: T) => ({
+      ...row,
+      profile: profilesById.get(row.user_id) ?? null,
+    });
+
     return {
       news: news.data ?? [],
       projects: projects.data ?? [],
       opportunities: opps.data ?? [],
-      reports: reports.data ?? [],
-      bursaries: bursaries.data ?? [],
+      reports: (reports.data ?? []).map(attach),
+      bursaries: (bursaries.data ?? []).map(attach),
     };
   });
 
