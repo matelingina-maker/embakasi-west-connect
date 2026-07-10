@@ -14,16 +14,310 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bursary_applications: {
+        Row: {
+          admin_notes: string | null
+          amount_requested: number
+          created_at: string
+          id: string
+          level: string
+          reason: string | null
+          school: string
+          status: Database["public"]["Enums"]["bursary_status"]
+          student_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_requested: number
+          created_at?: string
+          id?: string
+          level: string
+          reason?: string | null
+          school: string
+          status?: Database["public"]["Enums"]["bursary_status"]
+          student_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_requested?: number
+          created_at?: string
+          id?: string
+          level?: string
+          reason?: string | null
+          school?: string
+          status?: Database["public"]["Enums"]["bursary_status"]
+          student_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      issue_reports: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          location: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          title: string
+          updated_at: string
+          user_id: string
+          ward: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          location?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+          ward?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          location?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          ward?: string | null
+        }
+        Relationships: []
+      }
+      news: {
+        Row: {
+          author_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          published: boolean
+          summary: string
+          tag: string | null
+          title: string
+          updated_at: string
+          ward: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          published?: boolean
+          summary: string
+          tag?: string | null
+          title: string
+          updated_at?: string
+          ward?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          published?: boolean
+          summary?: string
+          tag?: string | null
+          title?: string
+          updated_at?: string
+          ward?: string | null
+        }
+        Relationships: []
+      }
+      opportunities: {
+        Row: {
+          apply_url: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          location: string | null
+          organization: string
+          published: boolean
+          title: string
+          type: Database["public"]["Enums"]["opportunity_type"]
+          updated_at: string
+        }
+        Insert: {
+          apply_url?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          organization: string
+          published?: boolean
+          title: string
+          type: Database["public"]["Enums"]["opportunity_type"]
+          updated_at?: string
+        }
+        Update: {
+          apply_url?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          organization?: string
+          published?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["opportunity_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          national_id: string | null
+          phone: string | null
+          updated_at: string
+          ward: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          national_id?: string | null
+          phone?: string | null
+          updated_at?: string
+          ward?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          national_id?: string | null
+          phone?: string | null
+          updated_at?: string
+          ward?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          progress: number
+          published: boolean
+          status: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at: string
+          ward: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          progress?: number
+          published?: boolean
+          status?: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at?: string
+          ward: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          progress?: number
+          published?: boolean
+          status?: Database["public"]["Enums"]["project_status"]
+          title?: string
+          updated_at?: string
+          ward?: string
+        }
+        Relationships: []
+      }
+      saved_opportunities: {
+        Row: {
+          created_at: string
+          opportunity_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          opportunity_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          opportunity_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_opportunities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "resident"
+      bursary_status: "pending" | "approved" | "rejected" | "disbursed"
+      opportunity_type: "Job" | "Internship" | "Attachment" | "Tender"
+      project_status: "Planning" | "Active" | "Completed"
+      report_status: "pending" | "in_progress" | "resolved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +444,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "resident"],
+      bursary_status: ["pending", "approved", "rejected", "disbursed"],
+      opportunity_type: ["Job", "Internship", "Attachment", "Tender"],
+      project_status: ["Planning", "Active", "Completed"],
+      report_status: ["pending", "in_progress", "resolved", "rejected"],
+    },
   },
 } as const
