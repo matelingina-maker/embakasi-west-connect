@@ -14,6 +14,11 @@ import {
   deleteOpportunity,
   updateReportStatus,
   updateBursaryStatus,
+  reviewResidency,
+  upsertFacility,
+  deleteFacility,
+  updateOpportunityAppStatus,
+  getSignedDocUrl,
 } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -32,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "news" | "projects" | "opportunities" | "reports" | "bursaries";
+type Tab = "overview" | "verifications" | "news" | "projects" | "opportunities" | "reports" | "bursaries" | "applications" | "facilities" | "activity";
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -44,11 +49,15 @@ function AdminPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
+    { id: "verifications", label: "Verifications" },
     { id: "news", label: "News" },
     { id: "projects", label: "Projects" },
     { id: "opportunities", label: "Opportunities" },
+    { id: "applications", label: "Job Applications" },
     { id: "reports", label: "Issue Reports" },
     { id: "bursaries", label: "Bursaries" },
+    { id: "facilities", label: "Facilities" },
+    { id: "activity", label: "Users & Activity" },
   ];
 
   return (
@@ -77,11 +86,15 @@ function AdminPage() {
       {data && (
         <>
           {tab === "overview" && <Overview data={data} />}
+          {tab === "verifications" && <VerificationsPanel rows={data.pendingResidents} />}
           {tab === "news" && <NewsPanel rows={data.news} />}
           {tab === "projects" && <ProjectsPanel rows={data.projects} />}
           {tab === "opportunities" && <OpportunitiesPanel rows={data.opportunities} />}
+          {tab === "applications" && <AppsPanel rows={data.oppApps} />}
           {tab === "reports" && <ReportsPanel rows={data.reports} />}
           {tab === "bursaries" && <BursariesPanel rows={data.bursaries} />}
+          {tab === "facilities" && <FacilitiesPanel rows={data.facilities} />}
+          {tab === "activity" && <ActivityPanel data={data} />}
         </>
       )}
     </div>
@@ -90,14 +103,17 @@ function AdminPage() {
 
 function Overview({ data }: { data: Awaited<ReturnType<typeof getAdminDashboard>> }) {
   const stats = [
+    { label: "Active users (30d)", value: data.activeUserCount },
+    { label: "Pending verifications", value: data.pendingResidents.length },
     { label: "News items", value: data.news.length },
     { label: "Projects", value: data.projects.length },
     { label: "Opportunities", value: data.opportunities.length },
     { label: "Open reports", value: data.reports.filter((r) => r.status === "pending" || r.status === "in_progress").length },
     { label: "Pending bursaries", value: data.bursaries.filter((b) => b.status === "pending").length },
+    { label: "Facilities tracked", value: data.facilities.length },
   ];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {stats.map((s) => (
         <div key={s.label} className="bg-white p-5 rounded-xl ring-1 ring-black/5">
           <p className="text-3xl font-semibold">{s.value}</p>
