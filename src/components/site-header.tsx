@@ -8,6 +8,7 @@ const nav = [
   { to: "/services", label: "Services" },
   { to: "/projects", label: "Projects" },
   { to: "/opportunities", label: "Opportunities" },
+  { to: "/facilities", label: "Facilities" },
   { to: "/news", label: "News" },
 ] as const;
 
@@ -43,8 +44,9 @@ export function SiteHeader() {
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-3">
-            <div className="size-8 bg-primary rounded-sm flex items-center justify-center">
-              <div className="size-3 bg-primary-foreground/30 rounded-full" />
+            <div className="flex items-center font-black text-xl leading-none tracking-tight select-none">
+              <span className="text-black">E</span>
+              <span className="text-[oklch(0.52_0.22_27)]">W</span>
             </div>
             <span className="font-semibold tracking-tight whitespace-nowrap">E-WEST HUB</span>
           </Link>
