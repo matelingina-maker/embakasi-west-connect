@@ -14,15 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       bursary_applications: {
         Row: {
           admin_notes: string | null
           amount_requested: number
           created_at: string
+          fee_structure_path: string | null
           id: string
           level: string
           reason: string | null
+          result_slip_path: string | null
           school: string
+          school_receipt_path: string | null
           status: Database["public"]["Enums"]["bursary_status"]
           student_name: string
           updated_at: string
@@ -32,10 +65,13 @@ export type Database = {
           admin_notes?: string | null
           amount_requested: number
           created_at?: string
+          fee_structure_path?: string | null
           id?: string
           level: string
           reason?: string | null
+          result_slip_path?: string | null
           school: string
+          school_receipt_path?: string | null
           status?: Database["public"]["Enums"]["bursary_status"]
           student_name: string
           updated_at?: string
@@ -45,14 +81,56 @@ export type Database = {
           admin_notes?: string | null
           amount_requested?: number
           created_at?: string
+          fee_structure_path?: string | null
           id?: string
           level?: string
           reason?: string | null
+          result_slip_path?: string | null
           school?: string
+          school_receipt_path?: string | null
           status?: Database["public"]["Enums"]["bursary_status"]
           student_name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      facilities: {
+        Row: {
+          assessment_notes: string | null
+          assessment_score: number | null
+          category: string
+          created_at: string
+          id: string
+          last_assessed: string | null
+          location: string | null
+          name: string
+          updated_at: string
+          ward: string
+        }
+        Insert: {
+          assessment_notes?: string | null
+          assessment_score?: number | null
+          category: string
+          created_at?: string
+          id?: string
+          last_assessed?: string | null
+          location?: string | null
+          name: string
+          updated_at?: string
+          ward: string
+        }
+        Update: {
+          assessment_notes?: string | null
+          assessment_score?: number | null
+          category?: string
+          created_at?: string
+          id?: string
+          last_assessed?: string | null
+          location?: string | null
+          name?: string
+          updated_at?: string
+          ward?: string
         }
         Relationships: []
       }
@@ -64,6 +142,7 @@ export type Database = {
           description: string
           id: string
           location: string | null
+          photo_path: string | null
           status: Database["public"]["Enums"]["report_status"]
           title: string
           updated_at: string
@@ -77,6 +156,7 @@ export type Database = {
           description: string
           id?: string
           location?: string | null
+          photo_path?: string | null
           status?: Database["public"]["Enums"]["report_status"]
           title: string
           updated_at?: string
@@ -90,11 +170,30 @@ export type Database = {
           description?: string
           id?: string
           location?: string | null
+          photo_path?: string | null
           status?: Database["public"]["Enums"]["report_status"]
           title?: string
           updated_at?: string
           user_id?: string
           ward?: string | null
+        }
+        Relationships: []
+      }
+      login_events: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -179,6 +278,59 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunity_applications: {
+        Row: {
+          additional_doc_path: string | null
+          admin_notes: string | null
+          applicant_name: string
+          cover_letter: string | null
+          created_at: string
+          cv_path: string | null
+          id: string
+          opportunity_id: string
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_doc_path?: string | null
+          admin_notes?: string | null
+          applicant_name: string
+          cover_letter?: string | null
+          created_at?: string
+          cv_path?: string | null
+          id?: string
+          opportunity_id: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_doc_path?: string | null
+          admin_notes?: string | null
+          applicant_name?: string
+          cover_letter?: string | null
+          created_at?: string
+          cv_path?: string | null
+          id?: string
+          opportunity_id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -186,6 +338,12 @@ export type Database = {
           id: string
           national_id: string | null
           phone: string | null
+          phone_verified: boolean
+          residency_rejection_reason: string | null
+          residency_reviewed_at: string | null
+          residency_reviewed_by: string | null
+          residency_status: Database["public"]["Enums"]["residency_status"]
+          residency_submitted_at: string | null
           updated_at: string
           ward: string | null
         }
@@ -195,6 +353,12 @@ export type Database = {
           id: string
           national_id?: string | null
           phone?: string | null
+          phone_verified?: boolean
+          residency_rejection_reason?: string | null
+          residency_reviewed_at?: string | null
+          residency_reviewed_by?: string | null
+          residency_status?: Database["public"]["Enums"]["residency_status"]
+          residency_submitted_at?: string | null
           updated_at?: string
           ward?: string | null
         }
@@ -204,6 +368,12 @@ export type Database = {
           id?: string
           national_id?: string | null
           phone?: string | null
+          phone_verified?: boolean
+          residency_rejection_reason?: string | null
+          residency_reviewed_at?: string | null
+          residency_reviewed_by?: string | null
+          residency_status?: Database["public"]["Enums"]["residency_status"]
+          residency_submitted_at?: string | null
           updated_at?: string
           ward?: string | null
         }
@@ -318,6 +488,7 @@ export type Database = {
       opportunity_type: "Job" | "Internship" | "Attachment" | "Tender"
       project_status: "Planning" | "Active" | "Completed"
       report_status: "pending" | "in_progress" | "resolved" | "rejected"
+      residency_status: "unverified" | "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -450,6 +621,7 @@ export const Constants = {
       opportunity_type: ["Job", "Internship", "Attachment", "Tender"],
       project_status: ["Planning", "Active", "Completed"],
       report_status: ["pending", "in_progress", "resolved", "rejected"],
+      residency_status: ["unverified", "pending", "verified", "rejected"],
     },
   },
 } as const
