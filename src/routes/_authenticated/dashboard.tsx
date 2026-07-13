@@ -10,6 +10,7 @@ import {
   submitReport,
   submitBursary,
   toggleSavedOpportunity,
+  submitResidencyVerification,
 } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -17,7 +18,20 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
-type Tab = "overview" | "profile" | "report" | "bursary" | "saved";
+type Tab = "overview" | "profile" | "verify" | "report" | "bursary" | "saved";
+
+async function uploadToBucket(bucket: string, file: File): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  const ext = file.name.split(".").pop() ?? "bin";
+  const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from(bucket).upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+  });
+  if (error) throw new Error(error.message);
+  return path;
+}
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -40,10 +54,13 @@ function Dashboard() {
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "profile", label: "Profile" },
+    { id: "verify", label: "Residency" },
     { id: "report", label: "Report Issue" },
     { id: "bursary", label: "Bursary" },
     { id: "saved", label: "Saved" },
   ];
+
+  const status = data?.profile?.residency_status ?? "unverified";
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 md:py-16">
@@ -61,6 +78,21 @@ function Dashboard() {
           Sign out
         </button>
       </div>
+
+      {data && status !== "verified" && (
+        <div className={`mb-6 rounded-lg p-4 text-sm ring-1 ${status === "rejected" ? "bg-red-50 ring-red-200 text-red-800" : status === "pending" ? "bg-amber-50 ring-amber-200 text-amber-900" : "bg-blue-50 ring-blue-200 text-blue-900"}`}>
+          <p className="font-medium">
+            {status === "pending" && "Residency verification is under review — usually within 48 hours."}
+            {status === "rejected" && `Residency verification was rejected. ${data?.profile?.residency_rejection_reason ?? ""}`}
+            {status === "unverified" && "Only verified Embakasi West residents can apply for bursaries, jobs, or file reports."}
+          </p>
+          {status !== "pending" && (
+            <button onClick={() => setTab("verify")} className="mt-2 text-xs font-semibold underline">
+              {status === "rejected" ? "Resubmit for review" : "Submit residency verification"}
+            </button>
+          )}
+        </div>
+      )}
 
       <nav className="flex gap-1 border-b border-border mb-8 overflow-x-auto">
         {tabs.map((t) => (
@@ -81,6 +113,7 @@ function Dashboard() {
         <>
           {tab === "overview" && <Overview data={data} />}
           {tab === "profile" && <ProfileForm profile={data.profile} />}
+          {tab === "verify" && <ResidencyForm profile={data.profile} />}
           {tab === "report" && <ReportForm />}
           {tab === "bursary" && <BursaryForm />}
           {tab === "saved" && <SavedList saved={data.saved} />}
@@ -114,6 +147,17 @@ function Overview({ data }: { data: NonNullable<Awaited<ReturnType<typeof getMyD
               </p>
             </div>
             <StatusPill value={b.status} />
+          </div>
+        ))}
+      </Card>
+      <Card title="My Job / Internship Applications" empty="No applications yet">
+        {data.oppApps.map((a) => (
+          <div key={a.id} className="flex items-center justify-between py-2 border-b last:border-none border-border">
+            <div>
+              <p className="text-sm font-medium">{a.opportunities?.title ?? "Opportunity"}</p>
+              <p className="text-xs text-muted-foreground">{a.opportunities?.organization} • {a.opportunities?.type}</p>
+            </div>
+            <StatusPill value={a.status} />
           </div>
         ))}
       </Card>
@@ -200,6 +244,7 @@ function Field({ label, name, defaultValue, placeholder, type = "text", required
 function ReportForm() {
   const submit = useServerFn(submitReport);
   const qc = useQueryClient();
+  const [uploading, setUploading] = useState(false);
   const m = useMutation({
     mutationFn: (data: {
       title: string;
@@ -207,6 +252,7 @@ function ReportForm() {
       description: string;
       location: string | null;
       ward: string | null;
+      photo_path: string | null;
     }) => submit({ data }),
     onSuccess: () => {
       toast.success("Report submitted. We will follow up.");
@@ -216,17 +262,31 @@ function ReportForm() {
   });
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        m.mutate({
-          title: fd.get("title") as string,
-          category: fd.get("category") as string,
-          description: fd.get("description") as string,
-          location: (fd.get("location") as string) || null,
-          ward: (fd.get("ward") as string) || null,
-        });
-        (e.currentTarget as HTMLFormElement).reset();
+        const form = e.currentTarget;
+        const fd = new FormData(form);
+        try {
+          const photo = fd.get("photo") as File | null;
+          let photoPath: string | null = null;
+          if (photo && photo.size > 0) {
+            setUploading(true);
+            photoPath = await uploadToBucket("issue-photos", photo);
+          }
+          await m.mutateAsync({
+            title: fd.get("title") as string,
+            category: fd.get("category") as string,
+            description: fd.get("description") as string,
+            location: (fd.get("location") as string) || null,
+            ward: (fd.get("ward") as string) || null,
+            photo_path: photoPath,
+          });
+          form.reset();
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed");
+        } finally {
+          setUploading(false);
+        }
       }}
       className="bg-white p-6 rounded-xl ring-1 ring-black/5 max-w-lg space-y-3"
     >
@@ -235,8 +295,9 @@ function ReportForm() {
       <Field label="Location" name="location" placeholder="Nearest landmark" />
       <Field label="Ward" name="ward" placeholder="Umoja II" />
       <Field label="Description" name="description" required textarea />
-      <button disabled={m.isPending} className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all disabled:opacity-60">
-        {m.isPending ? "Submitting…" : "Submit report"}
+      <FileField label="📷 Photo of the issue (optional — opens camera on mobile)" name="photo" accept="image/*" capture="environment" />
+      <button disabled={m.isPending || uploading} className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all disabled:opacity-60">
+        {uploading ? "Uploading…" : m.isPending ? "Submitting…" : "Submit report"}
       </button>
     </form>
   );
@@ -245,6 +306,7 @@ function ReportForm() {
 function BursaryForm() {
   const submit = useServerFn(submitBursary);
   const qc = useQueryClient();
+  const [uploading, setUploading] = useState(false);
   const m = useMutation({
     mutationFn: (data: {
       student_name: string;
@@ -252,9 +314,94 @@ function BursaryForm() {
       level: string;
       amount_requested: number;
       reason: string | null;
+      result_slip_path: string | null;
+      fee_structure_path: string | null;
+      school_receipt_path: string | null;
     }) => submit({ data }),
     onSuccess: () => {
       toast.success("Bursary application submitted");
+      qc.invalidateQueries({ queryKey: ["my-dashboard"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const fd = new FormData(form);
+        try {
+          setUploading(true);
+          const resultSlip = fd.get("result_slip") as File;
+          const feeStructure = fd.get("fee_structure") as File;
+          const receipt = fd.get("school_receipt") as File;
+          if (!resultSlip?.size || !feeStructure?.size) {
+            toast.error("Result slip and fee structure are required");
+            return;
+          }
+          const [rs, fs, sr] = await Promise.all([
+            uploadToBucket("bursary-docs", resultSlip),
+            uploadToBucket("bursary-docs", feeStructure),
+            receipt?.size ? uploadToBucket("bursary-docs", receipt) : Promise.resolve<string | null>(null),
+          ]);
+          await m.mutateAsync({
+            student_name: fd.get("student_name") as string,
+            school: fd.get("school") as string,
+            level: fd.get("level") as string,
+            amount_requested: Number(fd.get("amount_requested")),
+            reason: (fd.get("reason") as string) || null,
+            result_slip_path: rs,
+            fee_structure_path: fs,
+            school_receipt_path: sr,
+          });
+          form.reset();
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Upload failed");
+        } finally {
+          setUploading(false);
+        }
+      }}
+      className="bg-white p-6 rounded-xl ring-1 ring-black/5 max-w-lg space-y-3"
+    >
+      <Field label="Student name" name="student_name" required />
+      <Field label="School" name="school" required />
+      <Field label="Level" name="level" required placeholder="Secondary / Tertiary" />
+      <Field label="Amount requested (KES)" name="amount_requested" type="number" required />
+      <Field label="Reason" name="reason" textarea />
+      <FileField label="Result slip (required)" name="result_slip" accept="image/*,application/pdf" required />
+      <FileField label="Fee structure (required)" name="fee_structure" accept="image/*,application/pdf" required />
+      <FileField label="School receipt (optional)" name="school_receipt" accept="image/*,application/pdf" />
+      <button disabled={m.isPending || uploading} className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all disabled:opacity-60">
+        {uploading ? "Uploading…" : m.isPending ? "Submitting…" : "Submit application"}
+      </button>
+      <p className="text-xs text-muted-foreground">Documents are private and only visible to bursary administrators.</p>
+    </form>
+  );
+}
+
+function FileField({ label, name, accept, required, capture }: { label: string; name: string; accept?: string; required?: boolean; capture?: "user" | "environment" }) {
+  return (
+    <label className="block">
+      <span className="text-sm font-medium">{label}</span>
+      <input
+        type="file"
+        name={name}
+        accept={accept}
+        capture={capture}
+        required={required}
+        className="mt-1 block w-full text-sm file:mr-3 file:h-9 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground file:text-sm file:font-medium"
+      />
+    </label>
+  );
+}
+
+function ResidencyForm({ profile }: { profile: { full_name: string | null; phone: string | null; ward: string | null; national_id: string | null; residency_status?: string | null } | null }) {
+  const submit = useServerFn(submitResidencyVerification);
+  const qc = useQueryClient();
+  const m = useMutation({
+    mutationFn: (data: { full_name: string; phone: string; ward: string; national_id: string }) => submit({ data }),
+    onSuccess: () => {
+      toast.success("Submitted for admin review");
       qc.invalidateQueries({ queryKey: ["my-dashboard"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -265,23 +412,23 @@ function BursaryForm() {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         m.mutate({
-          student_name: fd.get("student_name") as string,
-          school: fd.get("school") as string,
-          level: fd.get("level") as string,
-          amount_requested: Number(fd.get("amount_requested")),
-          reason: (fd.get("reason") as string) || null,
+          full_name: fd.get("full_name") as string,
+          phone: fd.get("phone") as string,
+          ward: fd.get("ward") as string,
+          national_id: fd.get("national_id") as string,
         });
-        (e.currentTarget as HTMLFormElement).reset();
       }}
       className="bg-white p-6 rounded-xl ring-1 ring-black/5 max-w-lg space-y-3"
     >
-      <Field label="Student name" name="student_name" required />
-      <Field label="School" name="school" required />
-      <Field label="Level" name="level" required placeholder="Secondary / Tertiary" />
-      <Field label="Amount requested (KES)" name="amount_requested" type="number" required />
-      <Field label="Reason" name="reason" textarea />
+      <p className="text-sm text-muted-foreground">
+        Only verified Embakasi West residents can access services. Your details go to constituency admins for review.
+      </p>
+      <Field label="Full name (as on ID)" name="full_name" required defaultValue={profile?.full_name ?? ""} />
+      <Field label="Phone (Safaricom / Airtel)" name="phone" required defaultValue={profile?.phone ?? ""} placeholder="+2547XXXXXXXX" />
+      <Field label="Ward" name="ward" required defaultValue={profile?.ward ?? ""} placeholder="Umoja II, Mowlem, Kariobangi South, Mountain View" />
+      <Field label="National ID number" name="national_id" required defaultValue={profile?.national_id ?? ""} />
       <button disabled={m.isPending} className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all disabled:opacity-60">
-        {m.isPending ? "Submitting…" : "Submit application"}
+        {m.isPending ? "Submitting…" : "Submit for verification"}
       </button>
     </form>
   );
