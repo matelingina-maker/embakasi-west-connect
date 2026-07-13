@@ -99,12 +99,9 @@ export const searchContent = createServerFn({ method: "GET" })
 // -------------------------------------------------------------------------
 // Helper: verified-resident gate + activity log
 // -------------------------------------------------------------------------
-async function requireVerifiedResident(
-  supabase: Awaited<ReturnType<typeof requireSupabaseAuth.server>> extends never
-    ? never
-    : ReturnType<typeof publicClient>,
-  userId: string,
-): Promise<void> {
+type SbClient = ReturnType<typeof publicClient>;
+
+async function requireVerifiedResident(supabase: SbClient, userId: string): Promise<void> {
   const { data } = await supabase
     .from("profiles")
     .select("residency_status")
@@ -116,7 +113,7 @@ async function requireVerifiedResident(
 }
 
 async function logActivity(
-  supabase: ReturnType<typeof publicClient>,
+  supabase: SbClient,
   userId: string,
   action: string,
   entity_type?: string,
@@ -128,7 +125,7 @@ async function logActivity(
     action,
     entity_type: entity_type ?? null,
     entity_id: entity_id ?? null,
-    metadata: metadata ?? null,
+    metadata: (metadata ?? null) as never,
   });
 }
 
