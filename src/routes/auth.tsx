@@ -3,6 +3,24 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { logSignIn } from "@/lib/dashboard.functions";
+
+async function routeAfterLogin(navigate: ReturnType<typeof useNavigate>) {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return;
+  try {
+    await logSignIn();
+  } catch {
+    /* non-fatal */
+  }
+  const { data: role } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+  navigate({ to: role ? "/admin" : "/dashboard", replace: true });
+}
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -24,7 +42,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) void routeAfterLogin(navigate);
     });
   }, [navigate]);
 
@@ -48,7 +66,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back");
-        navigate({ to: "/dashboard" });
+        await routeAfterLogin(navigate);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -65,7 +83,7 @@ function AuthPage() {
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
-      navigate({ to: "/dashboard" });
+      await routeAfterLogin(navigate);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
       setLoading(false);
