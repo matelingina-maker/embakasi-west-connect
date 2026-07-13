@@ -15,6 +15,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as NewsRouteImport } from './routes/news'
+import { Route as FacilitiesRouteImport } from './routes/facilities'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -52,6 +53,11 @@ const NewsRoute = NewsRouteImport.update({
   path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FacilitiesRoute = FacilitiesRouteImport.update({
+  id: '/facilities',
+  path: '/facilities',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/facilities': typeof FacilitiesRoute
   '/news': typeof NewsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/projects': typeof ProjectsRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/facilities': typeof FacilitiesRoute
   '/news': typeof NewsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/projects': typeof ProjectsRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/facilities': typeof FacilitiesRoute
   '/news': typeof NewsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/projects': typeof ProjectsRoute
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/contact'
+    | '/facilities'
     | '/news'
     | '/opportunities'
     | '/projects'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/contact'
+    | '/facilities'
     | '/news'
     | '/opportunities'
     | '/projects'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/contact'
+    | '/facilities'
     | '/news'
     | '/opportunities'
     | '/projects'
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  FacilitiesRoute: typeof FacilitiesRoute
   NewsRoute: typeof NewsRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
   ProjectsRoute: typeof ProjectsRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/facilities': {
+      id: '/facilities'
+      path: '/facilities'
+      fullPath: '/facilities'
+      preLoaderRoute: typeof FacilitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -286,6 +306,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  FacilitiesRoute: FacilitiesRoute,
   NewsRoute: NewsRoute,
   OpportunitiesRoute: OpportunitiesRoute,
   ProjectsRoute: ProjectsRoute,
