@@ -15,7 +15,7 @@ function Index() {
       <header className="bg-white border-b border-border overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
           <div className="max-w-[640px]">
-            <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-primary text-[11px] font-semibold uppercase tracking-wider mb-6">
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold uppercase tracking-wider mb-6">
               Official Constituency Portal
             </span>
             <h1 className="text-4xl md:text-5xl font-semibold leading-tight text-balance mb-6">
