@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { listOpportunities } from "@/lib/dashboard.functions";
@@ -79,9 +79,13 @@ function OpportunitiesPage() {
               </div>
               <div className="text-sm font-medium">{op.deadline}</div>
             </div>
-            <button className="text-sm font-medium text-primary underline underline-offset-4 md:ml-4">
+            <Link
+              to="/apply/$id"
+              params={{ id: String(op.id) }}
+              className="text-sm font-medium text-primary underline underline-offset-4 md:ml-4"
+            >
               Apply
-            </button>
+            </Link>
           </div>
         ))}
       </div>
