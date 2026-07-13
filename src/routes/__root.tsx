@@ -92,10 +92,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Access CDF bursaries, report issues, and track development projects across Embakasi West.",
+          "Official digital portal for Embakasi West Constituency: bursaries, issue reporting, projects, jobs and news.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "E-WEST Hub — Embakasi West Constituency" },
+      { name: "twitter:description", content: "Official digital portal for Embakasi West Constituency: bursaries, issue reporting, projects, jobs and news." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5b15e6e6-1c8b-458e-a2b4-a9a386ba8349/id-preview-36e38b45--3a71c5da-a85a-4cd2-8760-a1b3e03ff6d2.lovable.app-1783944418626.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5b15e6e6-1c8b-458e-a2b4-a9a386ba8349/id-preview-36e38b45--3a71c5da-a85a-4cd2-8760-a1b3e03ff6d2.lovable.app-1783944418626.png" },
     ],
     links: [
       {
