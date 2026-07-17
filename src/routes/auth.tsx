@@ -5,9 +5,25 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { logSignIn } from "@/lib/dashboard.functions";
 
+async function waitForSession(timeoutMs = 5000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user) return data.session.user;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  return null;
+}
+
 async function routeAfterLogin(navigate: ReturnType<typeof useNavigate>) {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return;
+  // Wait for the session to actually persist to storage — on mobile browsers,
+  // signInWithPassword can resolve before storage is written, causing the
+  // protected route's beforeLoad to see no user and 404/redirect.
+  const user = await waitForSession();
+  if (!user) {
+    toast.error("Session not established. Please try again.");
+    return;
+  }
   try {
     await logSignIn();
   } catch {
@@ -16,10 +32,16 @@ async function routeAfterLogin(navigate: ReturnType<typeof useNavigate>) {
   const { data: role } = await supabase
     .from("user_roles")
     .select("role")
-    .eq("user_id", data.user.id)
+    .eq("user_id", user.id)
     .eq("role", "admin")
     .maybeSingle();
-  navigate({ to: role ? "/admin" : "/dashboard", replace: true });
+  const to = role ? "/admin" : "/dashboard";
+  // Use a hard navigation on mobile to guarantee the router picks up the
+  // freshly persisted session in beforeLoad (avoids stale in-memory state).
+  await navigate({ to, replace: true });
+  if (typeof window !== "undefined" && window.location.pathname === "/auth") {
+    window.location.replace(to);
+  }
 }
 
 export const Route = createFileRoute("/auth")({
