@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { services, toneStyles } from "@/lib/site-data";
 
 export const Route = createFileRoute("/services")({
@@ -38,9 +38,10 @@ function ServicesPage() {
         {services.map((s) => {
           const Icon = s.icon;
           return (
-            <article
+            <Link
               key={s.slug}
-              className="bg-white p-6 rounded-xl ring-1 ring-black/5 hover:ring-primary/20 transition-all"
+              to={s.href}
+              className="block bg-white p-6 rounded-xl ring-1 ring-black/5 hover:ring-primary/20 transition-all"
             >
               <div
                 className={`size-10 flex items-center justify-center rounded-lg mb-4 ${toneStyles[s.tone]}`}
@@ -49,11 +50,11 @@ function ServicesPage() {
               </div>
               <h3 className="text-lg font-medium mb-2">{s.title}</h3>
               <p className="text-sm text-muted-foreground mb-6 text-pretty">{s.blurb}</p>
-              <button className="text-sm font-medium text-primary inline-flex items-center gap-1.5 hover:translate-x-0.5 transition-transform">
+              <span className="text-sm font-medium text-primary inline-flex items-center gap-1.5 group-hover:translate-x-0.5 transition-transform">
                 {s.cta}
                 <span className="text-xs">→</span>
-              </button>
-            </article>
+              </span>
+            </Link>
           );
         })}
       </div>
