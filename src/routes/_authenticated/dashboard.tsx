@@ -242,6 +242,25 @@ function Field({ label, name, defaultValue, placeholder, type = "text", required
   );
 }
 
+function WardSelect({ label, defaultValue, required = false }: { label: string; defaultValue?: string; required?: boolean }) {
+  return (
+    <label className="block">
+      <span className="text-sm font-medium">{label}</span>
+      <select
+        name="ward"
+        defaultValue={defaultValue ?? ""}
+        required={required}
+        className="mt-1 w-full h-10 px-3 rounded-md ring-1 ring-border bg-white text-sm"
+      >
+        <option value="">Select a ward…</option>
+        {WARDS.map((w) => (
+          <option key={w} value={w}>{w}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function ReportForm() {
   const submit = useServerFn(submitReport);
   const qc = useQueryClient();
