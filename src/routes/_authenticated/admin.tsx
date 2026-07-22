@@ -19,6 +19,8 @@ import {
   deleteFacility,
   updateOpportunityAppStatus,
   getSignedDocUrl,
+  upsertAnnouncement,
+  deleteAnnouncement,
 } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -37,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "verifications" | "news" | "projects" | "opportunities" | "reports" | "bursaries" | "applications" | "facilities" | "activity";
+type Tab = "overview" | "announcements" | "verifications" | "news" | "projects" | "opportunities" | "reports" | "bursaries" | "applications" | "facilities" | "activity";
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -49,6 +51,7 @@ function AdminPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
+    { id: "announcements", label: "Breaking News" },
     { id: "verifications", label: "Verifications" },
     { id: "news", label: "News" },
     { id: "projects", label: "Projects" },
@@ -86,6 +89,7 @@ function AdminPage() {
       {data && (
         <>
           {tab === "overview" && <Overview data={data} />}
+          {tab === "announcements" && <AnnouncementsPanel rows={data.announcements ?? []} />}
           {tab === "verifications" && <VerificationsPanel rows={data.pendingResidents} />}
           {tab === "news" && <NewsPanel rows={data.news} />}
           {tab === "projects" && <ProjectsPanel rows={data.projects} />}
