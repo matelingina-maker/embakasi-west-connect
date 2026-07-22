@@ -655,7 +655,7 @@ function AnnouncementsPanel({ rows }: { rows: Announcement[] }) {
     qc.invalidateQueries({ queryKey: ["active-announcement"] });
   };
   const create = useMutation({
-    mutationFn: (d: { message: string; cta_label: string | null; cta_href: string | null; active: boolean }) => upsert({ data: d }),
+    mutationFn: (d: { id?: string; message: string; cta_label: string | null; cta_href: string | null; active: boolean }) => upsert({ data: d }),
     onSuccess: () => { toast.success("Announcement saved"); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -706,7 +706,7 @@ function AnnouncementsPanel({ rows }: { rows: Announcement[] }) {
             </div>
             <div className="flex gap-2 shrink-0">
               <button
-                onClick={() => create.mutate({ message: a.message, cta_label: a.cta_label, cta_href: a.cta_href, active: !a.active })}
+                onClick={() => create.mutate({ id: a.id, message: a.message, cta_label: a.cta_label, cta_href: a.cta_href, active: !a.active })}
                 className="h-8 px-3 text-xs rounded ring-1 ring-border"
               >
                 {a.active ? "Deactivate" : "Activate"}
