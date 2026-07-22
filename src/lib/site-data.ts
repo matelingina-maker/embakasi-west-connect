@@ -15,7 +15,11 @@ export type Service = {
   cta: string;
   tone: "primary" | "amber" | "blue" | "zinc" | "purple";
   icon: ComponentType<SVGProps<SVGSVGElement>>;
+  href: string;
 };
+
+export const WARDS = ["Umoja 1", "Umoja 2", "Mowlem", "Kariobangi South"] as const;
+export type Ward = (typeof WARDS)[number];
 
 export const services: Service[] = [
   {
@@ -26,6 +30,7 @@ export const services: Service[] = [
     cta: "Learn more",
     tone: "primary",
     icon: GraduationCap,
+    href: "/dashboard",
   },
   {
     slug: "report-issue",
@@ -35,6 +40,7 @@ export const services: Service[] = [
     cta: "File report",
     tone: "amber",
     icon: Megaphone,
+    href: "/dashboard",
   },
   {
     slug: "internships",
@@ -44,6 +50,7 @@ export const services: Service[] = [
     cta: "Browse openings",
     tone: "blue",
     icon: Users,
+    href: "/opportunities",
   },
   {
     slug: "projects",
@@ -53,6 +60,7 @@ export const services: Service[] = [
     cta: "Track progress",
     tone: "zinc",
     icon: HardHat,
+    href: "/projects",
   },
   {
     slug: "jobs",
@@ -62,6 +70,7 @@ export const services: Service[] = [
     cta: "View jobs",
     tone: "purple",
     icon: Briefcase,
+    href: "/opportunities",
   },
   {
     slug: "notices",
@@ -71,6 +80,7 @@ export const services: Service[] = [
     cta: "Read news",
     tone: "zinc",
     icon: Newspaper,
+    href: "/news",
   },
 ];
 
@@ -102,7 +112,7 @@ export const projects: Project[] = [
     title: "Mowlem Level 4 Hospital Expansion",
     description:
       "Adding a 50-bed maternity wing and new diagnostic laboratory equipment.",
-    ward: "Umoja II Ward",
+    ward: "Umoja 2",
     status: "Active",
     progress: 65,
     image: hospitalImg,
@@ -124,7 +134,7 @@ export const projects: Project[] = [
     title: "Umoja Primary Classroom Block",
     description:
       "Six new classrooms and a computer lab to relieve congestion at Umoja Primary.",
-    ward: "Umoja I Ward",
+    ward: "Umoja 1",
     status: "Active",
     progress: 40,
     image: hospitalImg,
@@ -135,7 +145,7 @@ export const projects: Project[] = [
     title: "Mountain View Street Lighting",
     description:
       "Installation of 120 solar-powered high-mast streetlights across estate roads.",
-    ward: "Mountain View",
+    ward: "Mowlem",
     status: "Planning",
     progress: 15,
     image: drainageImg,
