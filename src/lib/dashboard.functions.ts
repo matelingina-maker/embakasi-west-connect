@@ -411,7 +411,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const [news, projects, opps, reports, bursaries, oppApps, pendingResidents, facilities, activity, logins] = await Promise.all([
+    const [news, projects, opps, reports, bursaries, oppApps, pendingResidents, facilities, activity, logins, announcements] = await Promise.all([
       context.supabase.from("news").select("*").order("created_at", { ascending: false }),
       context.supabase.from("projects").select("*").order("created_at", { ascending: false }),
       context.supabase.from("opportunities").select("*").order("created_at", { ascending: false }),
@@ -443,6 +443,10 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
         .select("user_id, created_at")
         .order("created_at", { ascending: false })
         .limit(500),
+      context.supabase
+        .from("announcements")
+        .select("*")
+        .order("updated_at", { ascending: false }),
     ]);
 
     // Merge profile info for reports/bursaries/apps/activity
@@ -499,6 +503,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       activity: (activity.data ?? []).map(attach),
       activeUserCount: activeUserIds.size,
       topContributors,
+      announcements: announcements.data ?? [],
     };
   });
 
