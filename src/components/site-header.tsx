@@ -2,7 +2,9 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getActiveAnnouncement } from "@/lib/dashboard.functions";
 
 const nav = [
   { to: "/services", label: "Services" },
@@ -17,6 +19,12 @@ export function SiteHeader() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [q, setQ] = useState("");
+  const fetchAnnouncement = useServerFn(getActiveAnnouncement);
+  const { data: announcement } = useQuery({
+    queryKey: ["active-announcement"],
+    queryFn: () => fetchAnnouncement(),
+    staleTime: 60_000,
+  });
 
   async function handleSignOut() {
     await qc.cancelQueries();
@@ -27,19 +35,24 @@ export function SiteHeader() {
 
   return (
     <>
-      <aside className="bg-primary py-2 px-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          <p className="text-xs md:text-sm font-medium text-primary-foreground/90 text-pretty">
-            FY 2024/25 Bursary Application Window is now open. Deadline: 15th October.
-          </p>
-          <Link
-            to="/services"
-            className="text-xs font-semibold text-primary-foreground underline decoration-primary-foreground/40 underline-offset-4 hover:decoration-primary-foreground transition-all shrink-0"
-          >
-            Apply Now
-          </Link>
-        </div>
-      </aside>
+      {announcement && (
+        <aside className="bg-primary py-2 px-4">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <p className="text-xs md:text-sm font-medium text-primary-foreground/90 text-pretty">
+              <span className="uppercase tracking-widest text-[10px] font-bold mr-2 opacity-80">Breaking</span>
+              {announcement.message}
+            </p>
+            {announcement.cta_label && announcement.cta_href && (
+              <a
+                href={announcement.cta_href}
+                className="text-xs font-semibold text-primary-foreground underline decoration-primary-foreground/40 underline-offset-4 hover:decoration-primary-foreground transition-all shrink-0"
+              >
+                {announcement.cta_label}
+              </a>
+            )}
+          </div>
+        </aside>
+      )}
 
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
