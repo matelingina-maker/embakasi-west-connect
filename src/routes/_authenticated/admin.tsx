@@ -19,6 +19,8 @@ import {
   deleteFacility,
   updateOpportunityAppStatus,
   getSignedDocUrl,
+  upsertAnnouncement,
+  deleteAnnouncement,
 } from "@/lib/dashboard.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -37,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "verifications" | "news" | "projects" | "opportunities" | "reports" | "bursaries" | "applications" | "facilities" | "activity";
+type Tab = "overview" | "announcements" | "verifications" | "news" | "projects" | "opportunities" | "reports" | "bursaries" | "applications" | "facilities" | "activity";
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -49,6 +51,7 @@ function AdminPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
+    { id: "announcements", label: "Breaking News" },
     { id: "verifications", label: "Verifications" },
     { id: "news", label: "News" },
     { id: "projects", label: "Projects" },
@@ -86,6 +89,7 @@ function AdminPage() {
       {data && (
         <>
           {tab === "overview" && <Overview data={data} />}
+          {tab === "announcements" && <AnnouncementsPanel rows={data.announcements ?? []} />}
           {tab === "verifications" && <VerificationsPanel rows={data.pendingResidents} />}
           {tab === "news" && <NewsPanel rows={data.news} />}
           {tab === "projects" && <ProjectsPanel rows={data.projects} />}
@@ -635,6 +639,87 @@ function ActivityPanel({ data }: { data: Awaited<ReturnType<typeof getAdminDashb
             </li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+type Announcement = { id: string; message: string; cta_label: string | null; cta_href: string | null; active: boolean; updated_at: string };
+
+function AnnouncementsPanel({ rows }: { rows: Announcement[] }) {
+  const upsert = useServerFn(upsertAnnouncement);
+  const del = useServerFn(deleteAnnouncement);
+  const qc = useQueryClient();
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    qc.invalidateQueries({ queryKey: ["active-announcement"] });
+  };
+  const create = useMutation({
+    mutationFn: (d: { id?: string; message: string; cta_label: string | null; cta_href: string | null; active: boolean }) => upsert({ data: d }),
+    onSuccess: () => { toast.success("Announcement saved"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => del({ data: { id } }),
+    onSuccess: () => { toast.success("Deleted"); invalidate(); },
+  });
+
+  return (
+    <div className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          create.mutate({
+            message: fd.get("message") as string,
+            cta_label: (fd.get("cta_label") as string) || null,
+            cta_href: (fd.get("cta_href") as string) || null,
+            active: fd.get("active") === "on",
+          });
+          (e.currentTarget as HTMLFormElement).reset();
+        }}
+        className="bg-white p-6 rounded-xl ring-1 ring-black/5 space-y-3 max-w-2xl"
+      >
+        <h3 className="font-medium">Post a breaking news banner</h3>
+        <p className="text-xs text-muted-foreground">Shown at the top of every page. Set inactive to hide.</p>
+        <textarea name="message" required rows={2} placeholder="Message" className="w-full px-3 py-2 rounded-md ring-1 ring-border text-sm" />
+        <div className="grid grid-cols-2 gap-3">
+          <input name="cta_label" placeholder="Button label (optional)" className="h-10 px-3 rounded-md ring-1 ring-border text-sm" />
+          <input name="cta_href" placeholder="Button link (e.g. /services)" className="h-10 px-3 rounded-md ring-1 ring-border text-sm" />
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="active" defaultChecked /> Active (show on site)
+        </label>
+        <button className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium">Save announcement</button>
+      </form>
+
+      <div className="bg-white rounded-xl ring-1 ring-black/5 divide-y divide-border">
+        {rows.length === 0 && <p className="p-4 text-sm text-muted-foreground">No announcements yet.</p>}
+        {rows.map((a) => (
+          <div key={a.id} className="p-4 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{a.message}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {a.active ? "🟢 Active" : "⚪ Inactive"} • updated {new Date(a.updated_at).toLocaleString()}
+                {a.cta_label ? ` • CTA: ${a.cta_label} → ${a.cta_href}` : ""}
+              </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => create.mutate({ id: a.id, message: a.message, cta_label: a.cta_label, cta_href: a.cta_href, active: !a.active })}
+                className="h-8 px-3 text-xs rounded ring-1 ring-border"
+              >
+                {a.active ? "Deactivate" : "Activate"}
+              </button>
+              <button
+                onClick={() => remove.mutate(a.id)}
+                className="h-8 px-3 text-xs rounded ring-1 ring-border text-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

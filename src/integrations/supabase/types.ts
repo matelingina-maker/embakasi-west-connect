@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      announcements: {
+        Row: {
+          active: boolean
+          created_at: string
+          cta_href: string | null
+          cta_label: string | null
+          id: string
+          message: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cta_href?: string | null
+          cta_label?: string | null
+          id?: string
+          message: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cta_href?: string | null
+          cta_label?: string | null
+          id?: string
+          message?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bursary_applications: {
         Row: {
           admin_notes: string | null

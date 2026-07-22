@@ -12,6 +12,7 @@ import {
   toggleSavedOpportunity,
   submitResidencyVerification,
 } from "@/lib/dashboard.functions";
+import { WARDS } from "@/lib/site-data";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "My Dashboard — E-WEST Hub" }] }),
@@ -219,7 +220,7 @@ function ProfileForm({ profile }: { profile: { full_name: string | null; phone: 
     >
       <Field label="Full name" name="full_name" defaultValue={profile?.full_name ?? ""} />
       <Field label="Phone" name="phone" defaultValue={profile?.phone ?? ""} />
-      <Field label="Ward / estate" name="ward" defaultValue={profile?.ward ?? ""} placeholder="Umoja II, Mowlem…" />
+      <WardSelect label="Ward" defaultValue={profile?.ward ?? ""} />
       <Field label="National ID" name="national_id" defaultValue={profile?.national_id ?? ""} />
       <button disabled={m.isPending} className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all disabled:opacity-60">
         {m.isPending ? "Saving…" : "Save profile"}
@@ -237,6 +238,25 @@ function Field({ label, name, defaultValue, placeholder, type = "text", required
       ) : (
         <input type={type} name={name} defaultValue={defaultValue} placeholder={placeholder} required={required} className="mt-1 w-full h-10 px-3 rounded-md ring-1 ring-border bg-white text-sm" />
       )}
+    </label>
+  );
+}
+
+function WardSelect({ label, defaultValue, required = false }: { label: string; defaultValue?: string; required?: boolean }) {
+  return (
+    <label className="block">
+      <span className="text-sm font-medium">{label}</span>
+      <select
+        name="ward"
+        defaultValue={defaultValue ?? ""}
+        required={required}
+        className="mt-1 w-full h-10 px-3 rounded-md ring-1 ring-border bg-white text-sm"
+      >
+        <option value="">Select a ward…</option>
+        {WARDS.map((w) => (
+          <option key={w} value={w}>{w}</option>
+        ))}
+      </select>
     </label>
   );
 }
@@ -293,7 +313,7 @@ function ReportForm() {
       <Field label="Title" name="title" required placeholder="Broken streetlight on Mowlem Road" />
       <Field label="Category" name="category" required placeholder="Roads, Drainage, Streetlight, Security…" />
       <Field label="Location" name="location" placeholder="Nearest landmark" />
-      <Field label="Ward" name="ward" placeholder="Umoja II" />
+      <WardSelect label="Ward" />
       <Field label="Description" name="description" required textarea />
       <FileField label="📷 Photo of the issue (optional — opens camera on mobile)" name="photo" accept="image/*" capture="environment" />
       <button disabled={m.isPending || uploading} className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all disabled:opacity-60">
@@ -425,7 +445,7 @@ function ResidencyForm({ profile }: { profile: { full_name: string | null; phone
       </p>
       <Field label="Full name (as on ID)" name="full_name" required defaultValue={profile?.full_name ?? ""} />
       <Field label="Phone (Safaricom / Airtel)" name="phone" required defaultValue={profile?.phone ?? ""} placeholder="+2547XXXXXXXX" />
-      <Field label="Ward" name="ward" required defaultValue={profile?.ward ?? ""} placeholder="Umoja II, Mowlem, Kariobangi South, Mountain View" />
+      <WardSelect label="Ward" required defaultValue={profile?.ward ?? ""} />
       <Field label="National ID number" name="national_id" required defaultValue={profile?.national_id ?? ""} />
       <button disabled={m.isPending} className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:brightness-110 transition-all disabled:opacity-60">
         {m.isPending ? "Submitting…" : "Submit for verification"}

@@ -96,6 +96,48 @@ export const searchContent = createServerFn({ method: "GET" })
     };
   });
 
+export const getActiveAnnouncement = createServerFn({ method: "GET" }).handler(async () => {
+  const supabase = publicClient();
+  const { data } = await supabase
+    .from("announcements")
+    .select("id, message, cta_label, cta_href")
+    .eq("active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ?? null;
+});
+
+const announcementSchema = z.object({
+  id: z.string().uuid().optional(),
+  message: z.string().trim().min(3).max(500),
+  cta_label: z.string().trim().max(60).optional().nullable(),
+  cta_href: z.string().trim().max(500).optional().nullable(),
+  active: z.boolean().default(true),
+});
+
+export const upsertAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => announcementSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = data.id
+      ? await context.supabase.from("announcements").update(data).eq("id", data.id)
+      : await context.supabase.from("announcements").insert(data);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("announcements").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // -------------------------------------------------------------------------
 // Helper: verified-resident gate + activity log
 // -------------------------------------------------------------------------
@@ -369,7 +411,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const [news, projects, opps, reports, bursaries, oppApps, pendingResidents, facilities, activity, logins] = await Promise.all([
+    const [news, projects, opps, reports, bursaries, oppApps, pendingResidents, facilities, activity, logins, announcements] = await Promise.all([
       context.supabase.from("news").select("*").order("created_at", { ascending: false }),
       context.supabase.from("projects").select("*").order("created_at", { ascending: false }),
       context.supabase.from("opportunities").select("*").order("created_at", { ascending: false }),
@@ -401,6 +443,10 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
         .select("user_id, created_at")
         .order("created_at", { ascending: false })
         .limit(500),
+      context.supabase
+        .from("announcements")
+        .select("*")
+        .order("updated_at", { ascending: false }),
     ]);
 
     // Merge profile info for reports/bursaries/apps/activity
@@ -457,6 +503,7 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       activity: (activity.data ?? []).map(attach),
       activeUserCount: activeUserIds.size,
       topContributors,
+      announcements: announcements.data ?? [],
     };
   });
 

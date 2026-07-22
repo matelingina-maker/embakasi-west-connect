@@ -68,7 +68,7 @@ function Index() {
               return (
                 <Link
                   key={s.slug}
-                  to="/services"
+                  to={s.href}
                   className="group bg-white p-6 rounded-xl ring-1 ring-black/5 hover:ring-primary/20 transition-all block"
                 >
                   <div
